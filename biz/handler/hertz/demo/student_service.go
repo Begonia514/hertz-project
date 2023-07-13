@@ -15,6 +15,7 @@ import (
 	kclient "github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/client/genericclient"
 	"github.com/cloudwego/kitex/pkg/generic"
+	//"golang.org/x/text/cases"
 )
 
 // Register .
@@ -50,9 +51,26 @@ func Register(ctx context.Context, c *app.RequestContext) {
 	// }
 	// RegiResp, respError := cli.Register(context.Background())
 
+	cli := initGenericClient()
+
+	httpReq, err := adaptor.GetCompatRequest(c.GetRequest())
+	if err!=nil{
+		panic("get http req failed")
+	}
+
+	customReq, err := generic.FromHTTPRequest(httpReq)
+	if err!=nil{
+		panic("get custom req failed")
+	}
+
+	resp, err := cli.GenericCall(ctx,"Register",customReq)
+
+	if err!=nil{
+		panic("resp error")
+	}
 
 
-	resp := new(demo.RegisterResp)
+	//resp := new(demo.RegisterResp)
 
 	c.JSON(consts.StatusOK, resp)
 }
@@ -82,6 +100,9 @@ func Query(ctx context.Context, c *app.RequestContext) {
 
 	resp, err := cli.GenericCall(ctx,"Query",customReq)
 
+	if err!=nil{
+		panic("resp error")
+	}
 
 	// resp := new(demo.Student)
 
@@ -100,7 +121,18 @@ func initGenericClient() genericclient.Client{
 		panic(err)
 	}
 
-	cli,err := genericclient.NewClient("Register", g ,
+	var cli genericclient.Client
+/*
+	switch service{
+	case "Register":
+		cli,err = genericclient.NewClient("Register", g ,
+		kclient.WithHostPorts("127.0.0.1:9999"),
+		)
+	case "Query":
+
+	}*/
+
+	cli,err = genericclient.NewClient("service", g ,
 		kclient.WithHostPorts("127.0.0.1:9999"),
 	)
 
