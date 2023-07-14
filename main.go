@@ -3,6 +3,8 @@
 package main
 
 import (
+	demo "project2/biz/handler/hertz/demo"
+
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
@@ -10,5 +12,6 @@ func main() {
 	h := server.Default()
 
 	register(h)
+	demo.InitGenericClient("studentservice")
 	h.Spin()
 }

@@ -4,6 +4,8 @@ package demo
 
 import (
 	"context"
+	"os"
+	"time"
 
 	demo "project2/biz/model/hertz/demo"
 	// kitexdemo "project2/kitex_gen/hertz/demo"
@@ -15,9 +17,12 @@ import (
 	kclient "github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/client/genericclient"
 	"github.com/cloudwego/kitex/pkg/generic"
+	"github.com/cloudwego/kitex/pkg/klog"
+	// etcd "github.com/kitex-contrib/registry-etcd"
 	//"golang.org/x/text/cases"
 )
 
+// var PG ProviderGetter=ProviderGetter{lastThriftTime: 0}
 // Register .
 // @router /add-student-info [POST]
 func Register(ctx context.Context, c *app.RequestContext) {
@@ -29,7 +34,6 @@ func Register(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-
 
 	// httpReq, errhttp := adaptor.GetCompatRequest(c.GetRequest())
 	// if errhttp != nil {
@@ -51,24 +55,24 @@ func Register(ctx context.Context, c *app.RequestContext) {
 	// }
 	// RegiResp, respError := cli.Register(context.Background())
 
-	cli := initRPCGenericClient("add-student-info")
+	// cli := initGenericClient("add-student-info")
 
 	httpReq, err := adaptor.GetCompatRequest(c.GetRequest())
-	if err!=nil{
+	if err != nil {
 		panic("get http req failed")
 	}
 
 	customReq, err := generic.FromHTTPRequest(httpReq)
-	if err!=nil{
+	if err != nil {
 		panic("get custom req failed")
 	}
 
-	resp, err := cli.GenericCall(ctx,"Register",customReq)
+	resp, err := cli.GenericCall(ctx, "Register", customReq)
 
-	if err!=nil{
-		panic("resp error")
+	if err != nil {
+		// panic("resp error")
+		panic(err)
 	}
-
 
 	//resp := new(demo.RegisterResp)
 
@@ -86,21 +90,21 @@ func Query(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	cli := initRPCGenericClient("query")
+	// cli := initGenericClient("query")
 
 	httpReq, err := adaptor.GetCompatRequest(c.GetRequest())
-	if err!=nil{
+	if err != nil {
 		panic("get http req failed")
 	}
 
 	customReq, err := generic.FromHTTPRequest(httpReq)
-	if err!=nil{
+	if err != nil {
 		panic("get custom req failed")
 	}
 
-	resp, err := cli.GenericCall(ctx,"Query",customReq)
+	resp, err := cli.GenericCall(ctx, "Query", customReq)
 
-	if err!=nil{
+	if err != nil {
 		panic("resp error")
 	}
 
@@ -109,67 +113,55 @@ func Query(ctx context.Context, c *app.RequestContext) {
 	c.JSON(consts.StatusOK, resp)
 }
 
+var p *generic.ThriftContentProvider = nil
+var cli genericclient.Client = nil
 
-func initRPCGenericClient(serviceName string) genericclient.Client{
-	p,err:=generic.NewThriftFileProvider("./idl/student.thrift")
-	if err!=nil{
+func InitGenericClient(serviceName string) {
+
+	// r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	idlContent, err := os.ReadFile("../project3/idl/student.thrift")
+	if err != nil {
 		panic(err)
 	}
 
-	g,err:=generic.HTTPThriftGeneric(p)
-	if err!=nil{
+	p, err = generic.NewThriftContentProvider(string(idlContent), map[string]string{})
+	if err != nil {
 		panic(err)
 	}
 
-	var cli genericclient.Client
+	g, err := generic.HTTPThriftGeneric(p)
+	if err != nil {
+		panic(err)
+	}
 
-	cli,err = genericclient.NewClient(serviceName, g ,
-		kclient.WithHostPorts("127.0.0.1:9999"),
+	cli, err = genericclient.NewClient(serviceName, g,
+		kclient.WithHostPorts("127.0.0.1:9999"), //kclient.WithResolver(r),
 	)
-
-	if err!=nil{
+	if err != nil {
 		panic(err)
 	}
 
-	return cli
+	go func() {
+		ticker := time.NewTicker(time.Second * 10)
+		for range ticker.C {
+			UpdateIdl()
+			klog.Info("update idl")
+		}
+	}()
 }
 
-func initJSONGenericClient(serviceName string) genericclient.Client{
-	p,err:=generic.NewThriftFileProvider("./idl/student.thrift")
-	if err!=nil{
+func UpdateIdl() {
+	idlContent, err := os.ReadFile("../project3/idl/student.thrift")
+	if err != nil {
 		panic(err)
 	}
 
-	g,err:=generic.JSONThriftGeneric(p)
-	if err!=nil{
+	err = p.UpdateIDL(string(idlContent), nil)
+	if err != nil {
 		panic(err)
 	}
-
-	var cli genericclient.Client
-
-	cli,err = genericclient.NewClient(serviceName, g ,
-		kclient.WithHostPorts("127.0.0.1:9999"),
-	)
-
-	if err!=nil{
-		panic(err)
-	}
-
-	return cli
 }
-
-// func getHttpThriftGeneric(p generic.DescriptorProvider)generic.Generic{
-// 	g,err:=generic.HTTPThriftGeneric(p)
-// 	if err!=nil{
-// 		panic(err)
-// 	}
-// 	return g
-// }
-
-// func getJsonThriftGeneric(p generic.DescriptorProvider)generic.Generic{
-// 	g,err:=generic.JSONThriftGeneric(p)
-// 	if err!=nil{
-// 		panic(err)
-// 	}
-// 	return g
-// }
