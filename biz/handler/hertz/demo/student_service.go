@@ -51,7 +51,7 @@ func Register(ctx context.Context, c *app.RequestContext) {
 	// }
 	// RegiResp, respError := cli.Register(context.Background())
 
-	cli := initGenericClient()
+	cli := initRPCGenericClient("add-student-info")
 
 	httpReq, err := adaptor.GetCompatRequest(c.GetRequest())
 	if err!=nil{
@@ -86,7 +86,7 @@ func Query(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	cli := initGenericClient()
+	cli := initRPCGenericClient("query")
 
 	httpReq, err := adaptor.GetCompatRequest(c.GetRequest())
 	if err!=nil{
@@ -110,7 +110,7 @@ func Query(ctx context.Context, c *app.RequestContext) {
 }
 
 
-func initGenericClient() genericclient.Client{
+func initRPCGenericClient(serviceName string) genericclient.Client{
 	p,err:=generic.NewThriftFileProvider("./idl/student.thrift")
 	if err!=nil{
 		panic(err)
@@ -122,17 +122,8 @@ func initGenericClient() genericclient.Client{
 	}
 
 	var cli genericclient.Client
-/*
-	switch service{
-	case "Register":
-		cli,err = genericclient.NewClient("Register", g ,
-		kclient.WithHostPorts("127.0.0.1:9999"),
-		)
-	case "Query":
 
-	}*/
-
-	cli,err = genericclient.NewClient("service", g ,
+	cli,err = genericclient.NewClient(serviceName, g ,
 		kclient.WithHostPorts("127.0.0.1:9999"),
 	)
 
@@ -142,3 +133,43 @@ func initGenericClient() genericclient.Client{
 
 	return cli
 }
+
+func initJSONGenericClient(serviceName string) genericclient.Client{
+	p,err:=generic.NewThriftFileProvider("./idl/student.thrift")
+	if err!=nil{
+		panic(err)
+	}
+
+	g,err:=generic.JSONThriftGeneric(p)
+	if err!=nil{
+		panic(err)
+	}
+
+	var cli genericclient.Client
+
+	cli,err = genericclient.NewClient(serviceName, g ,
+		kclient.WithHostPorts("127.0.0.1:9999"),
+	)
+
+	if err!=nil{
+		panic(err)
+	}
+
+	return cli
+}
+
+// func getHttpThriftGeneric(p generic.DescriptorProvider)generic.Generic{
+// 	g,err:=generic.HTTPThriftGeneric(p)
+// 	if err!=nil{
+// 		panic(err)
+// 	}
+// 	return g
+// }
+
+// func getJsonThriftGeneric(p generic.DescriptorProvider)generic.Generic{
+// 	g,err:=generic.JSONThriftGeneric(p)
+// 	if err!=nil{
+// 		panic(err)
+// 	}
+// 	return g
+// }
