@@ -14,7 +14,8 @@ func main() {
 	go http.ListenAndServe("localhost:8080",nil)
 	h := server.Default()
 
-	register(h)
 	demo.InitGenericClient("studentservice")
+	register(h)
+
 	h.Spin()
 }
