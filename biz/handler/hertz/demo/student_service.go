@@ -8,8 +8,7 @@ import (
 	"time"
 
 	demo "project2/biz/model/hertz/demo"
-	// kitexdemo "project2/kitex_gen/hertz/demo"
-	// studentservice "project2/kitex_gen/hertz/demo/studentservice"
+
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/adaptor"
@@ -18,8 +17,6 @@ import (
 	"github.com/cloudwego/kitex/client/genericclient"
 	"github.com/cloudwego/kitex/pkg/generic"
 	"github.com/cloudwego/kitex/pkg/klog"
-	// etcd "github.com/kitex-contrib/registry-etcd"
-	//"golang.org/x/text/cases"
 )
 
 // var PG ProviderGetter=ProviderGetter{lastThriftTime: 0}
