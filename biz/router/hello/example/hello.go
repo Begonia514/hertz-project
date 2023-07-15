@@ -4,7 +4,7 @@ package example
 
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
-	example "project2/biz/handler/hello/example"
+	example "hertz-project/biz/handler/hello/example"
 )
 
 /*

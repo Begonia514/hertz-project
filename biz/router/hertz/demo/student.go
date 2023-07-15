@@ -4,7 +4,7 @@ package demo
 
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
-	demo "project2/biz/handler/hertz/demo"
+	demo "hertz-project/biz/handler/hertz/demo"
 )
 
 /*
@@ -16,7 +16,7 @@ import (
 // Register register routes based on the IDL 'api.${HTTP Method}' annotation.
 func Register(r *server.Hertz) {
 
-	root := r.Group("/", rootMw()...)
+	root := r.Group("/v1", rootMw()...)
 	root.POST("/add-student-info", append(_registerMw(), demo.Register)...)
 	root.GET("/query", append(_queryMw(), demo.Query)...)
 }

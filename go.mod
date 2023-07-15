@@ -1,4 +1,4 @@
-module project2
+module hertz-project
 
 go 1.20
 

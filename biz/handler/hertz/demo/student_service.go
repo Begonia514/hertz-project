@@ -7,8 +7,7 @@ import (
 	"os"
 	"time"
 
-	demo "project2/biz/model/hertz/demo"
-
+	demo "hertz-project/biz/model/hertz/demo"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/adaptor"
@@ -32,47 +31,26 @@ func Register(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	// httpReq, errhttp := adaptor.GetCompatRequest(c.GetRequest())
-	// if errhttp != nil {
-	// 	c.String(consts.StatusBadRequest, errhttp.Error())
-	// }
-	// cli, errhitex := studentservice.NewClient("register", client.WithHostPorts("127.0.0.1:9999"))
-	// if errhitex != nil {
-	// 	c.String(consts.StatusBadRequest, errhitex.Error())
-	// }
-
-	// RegiReq := &kitexdemo.Student{
-	// 	Id:   req.ID,
-	// 	Name: req.Name,
-	// 	College: &kitexdemo.College{
-	// 		Name:    req.College.Name,
-	// 		Address: req.College.Address,
-	// 	},
-	// 	Email: req.Email,
-	// }
-	// RegiResp, respError := cli.Register(context.Background())
-
-	// cli := initGenericClient("add-student-info")
-
+	/*****************实现转化为http请求***************/
 	httpReq, err := adaptor.GetCompatRequest(c.GetRequest())
 	if err != nil {
 		panic("get http req failed")
 	}
 
+	/*****************实现转化为custom请求***************/
 	customReq, err := generic.FromHTTPRequest(httpReq)
 	if err != nil {
 		panic("get custom req failed")
 	}
 
+	/*****************实现泛化client发起请求***************/
 	resp, err := cli.GenericCall(ctx, "Register", customReq)
 
 	if err != nil {
-		// panic("resp error")
 		panic(err)
 	}
 
-	//resp := new(demo.RegisterResp)
-
+	/*****************处理结果***************/
 	c.JSON(consts.StatusOK, resp)
 }
 
@@ -87,40 +65,37 @@ func Query(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	// cli := initGenericClient("query")
-
+	/*****************实现转化为http请求***************/
 	httpReq, err := adaptor.GetCompatRequest(c.GetRequest())
 	if err != nil {
 		panic("get http req failed")
 	}
 
+	/*****************实现转化为custom请求***************/
 	customReq, err := generic.FromHTTPRequest(httpReq)
 	if err != nil {
 		panic("get custom req failed")
 	}
 
+	/*****************实现泛化client发起请求***************/
 	resp, err := cli.GenericCall(ctx, "Query", customReq)
 
 	if err != nil {
 		panic("resp error")
 	}
 
-	// resp := new(demo.Student)
-
+	/*****************处理结果***************/
 	c.JSON(consts.StatusOK, resp)
 }
 
 var p *generic.ThriftContentProvider = nil
+
+/*****************全局的泛化client并会随着idl更新而实时更新***************/
 var cli genericclient.Client = nil
 
 func InitGenericClient(serviceName string) {
 
-	// r, err := etcd.NewEtcdResolver([]string{"127.0.0.1:2379"})
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	idlContent, err := os.ReadFile("../project3/idl/student.thrift")
+	idlContent, err := os.ReadFile("../kitex-project/idl/student.thrift")
 	if err != nil {
 		panic(err)
 	}
@@ -130,6 +105,7 @@ func InitGenericClient(serviceName string) {
 		panic(err)
 	}
 
+	/*****************实现client的http泛化***************/
 	g, err := generic.HTTPThriftGeneric(p)
 	if err != nil {
 		panic(err)
@@ -152,7 +128,7 @@ func InitGenericClient(serviceName string) {
 }
 
 func UpdateIdl() {
-	idlContent, err := os.ReadFile("../project3/idl/student.thrift")
+	idlContent, err := os.ReadFile("../kitex-project/idl/student.thrift")
 	if err != nil {
 		panic(err)
 	}

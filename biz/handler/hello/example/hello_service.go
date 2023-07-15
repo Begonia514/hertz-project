@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	example "project2/biz/model/hello/example"
+	example "hertz-project/biz/model/hello/example"
 )
 
 // HelloMethod .

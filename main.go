@@ -3,7 +3,7 @@
 package main
 
 import (
-	demo "project2/biz/handler/hertz/demo"
+	demo "hertz-project/biz/handler/hertz/demo"
 	"github.com/cloudwego/hertz/pkg/app/server"
 
 	"net/http"
