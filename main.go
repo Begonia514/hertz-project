@@ -4,11 +4,14 @@ package main
 
 import (
 	demo "project2/biz/handler/hertz/demo"
-
 	"github.com/cloudwego/hertz/pkg/app/server"
+
+	"net/http"
+	_ "net/http/pprof"
 )
 
 func main() {
+	go http.ListenAndServe("localhost:8080",nil)
 	h := server.Default()
 
 	register(h)
