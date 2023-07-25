@@ -1,10 +1,109 @@
 ## 基于CloudWeGo的API网关开发
 
+### 环境准备(以Debian/Ubuntu为例)
+
+1. curl:
+
+```
+sudo apt update
+sudo apt install curl
+```
+
+2. etcd:
+
+下载：https://github.com/etcd-io/etcd/releases
+
+解压得到 etcd （服务程序）和 etcdctl（命令行工具）
+
+将这两个文件复制到 /usr/local/bin
+
+```
+curl -LO https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-linux-amd64.tar.gz
+
+tar xvf etcd-v3.5.9-linux-amd64.tar.gz
+
+cd etcd-v3.5.9-linux-amd64.tar.gz
+
+sudo cp etcd /usr/local/bin/
+sudo cp etcdctl /usr/local/bin/
+```
+
+3. golang:
+
+```
+curl -LO https://golang.google.cn/dl/go1.20.5.linux-amd64.tar.gz
+
+sudo tar -C /usr/local -xzf go1.20.5.linux-amd64.tar.gz
+```
+
+​	sudo vim打开/etc/profile文件修改环境变量
+
+```
+sudo vim /etc/profile
+```
+
+​	追加一行
+
+```
+export PATH=$PATH:/usr/local/go/bin
+```
+
+​	使生效
+
+```
+source /etc/profile
+```
+
+​	验证环境
+
+```
+ go version
+```
+
+### 快速开始
+
+1. 新建一个文件夹，将kitex-project与hertz-project放在这个文件夹下，文件结构如下
+
+```
+
+├── hertz-project
+└── kitex-project
+```
+
+2. 开启etcd负载均衡：新建一个终端，输入以下指令
+
+```
+etcd --log-level debug
+```
+
+3. 启动hertz-project：新建一个终端，进入/hertz-project文件夹下，输入以下指令
+
+```
+go build
+./hertz-project
+```
+
+4. 启动kitex-project服务端：新建一个终端，进入/kitex-project文件夹下，输入以下指令
+
+```
+go run .
+```
+
+5. 使用curl对服务进行访问：新建一个终端，输入curl指令访问
+
+```
+curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8888/add-student-info -d '{"id": 100, "name":"Emma","sex":"female", "college": {"name": "software college", "address": "逸夫"}, "email": ["emma@nju.com"]}'
+```
+
+```
+ curl -H "Content-Type: application/json" -X GET http://127.0.0.1:8888/query?id=100
+```
+
 ### API网关核心功能展示
 
 #### 正确响应 HTTP POST请求，请求体为JSON格式
 
-
+如“快速开始”所示
 
 #### 根据请求路由确认目标服务和方法
 
