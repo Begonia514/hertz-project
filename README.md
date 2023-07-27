@@ -292,7 +292,7 @@ func InitGenericClient(serviceName string) {
 
 #### 编码：代码可读性，模块划分合理性，单元测试覆盖率等
 
-
+参考项目代码
 
 
 
