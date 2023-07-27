@@ -71,7 +71,7 @@ func Query(ctx context.Context, c *app.RequestContext) {
 		panic("get http req failed")
 	}
 
-	/*****************实现转化为custom请求***************/
+	/*****************实现转化为 custom 请求***************/
 	customReq, err := generic.FromHTTPRequest(httpReq)
 	if err != nil {
 		panic("get custom req failed")
@@ -89,12 +89,14 @@ func Query(ctx context.Context, c *app.RequestContext) {
 }
 
 var p *generic.ThriftContentProvider = nil
+var serviceNameCache string
 
 /*****************全局的泛化client并会随着idl更新而实时更新***************/
 var cli genericclient.Client = nil
 
 func InitGenericClient(serviceName string) {
 
+	serviceNameCache = serviceName
 	idlContent, err := os.ReadFile("../kitex-project/idl/student.thrift")
 	if err != nil {
 		panic(err)
@@ -111,7 +113,7 @@ func InitGenericClient(serviceName string) {
 		panic(err)
 	}
 
-	cli, err = genericclient.NewClient(serviceName, g,
+	cli, err = genericclient.NewClient(serviceNameCache, g,
 		kclient.WithHostPorts("127.0.0.1:9999"), //kclient.WithResolver(r),
 	)
 	if err != nil {
@@ -122,7 +124,14 @@ func InitGenericClient(serviceName string) {
 		ticker := time.NewTicker(time.Second * 10)
 		for range ticker.C {
 			UpdateIdl()
-			klog.Info("update idl")
+			gen, err := generic.HTTPThriftGeneric(p)
+			if err != nil {
+				panic(err)
+			}
+			cli, err = genericclient.NewClient(serviceNameCache, gen,
+				kclient.WithHostPorts("127.0.0.1:9999"), //kclient.WithResolver(r),
+			)
+			klog.Info("update idl and generic client")
 		}
 	}()
 }
