@@ -120,7 +120,7 @@ curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8888/add-stude
    ......
    func Register(r *server.Hertz) {
    
-   	root := r.Group("/v1", rootMw()...)// 此处的“/v1”为手动添加，原本为“/”
+   	root := r.Group("/", rootMw()...)
    	root.POST("/add-student-info", append(_registerMw(), demo.Register)...)
    	root.GET("/query", append(_queryMw(), demo.Query)...)
    }
@@ -141,10 +141,6 @@ curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8888/add-stude
    func customizedRegister(r *server.Hertz) {
    	r.GET("/ping", handler.Ping)
    
-   
-   
-   	rg := r.Group("/v1")
-   
    	rg.POST("/add-student-info",demo.Register)
    
    	rg.GET("/query",demo.Query)
@@ -152,9 +148,8 @@ curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8888/add-stude
    }
    ```
    
-   
 
-
+**ps：本项目是参考第一种方式实现的**
 
 #### 网关内的 IDL 管理模块，可为构造 Kitex Client 提供 IDL
 
@@ -235,8 +230,6 @@ func main() {
 ```
 
 
-
-**本项目是参考第一种方式实现的**
 
 #### 构造 Kitex 泛化调用客户端、发起请求并处理影响结果
 
