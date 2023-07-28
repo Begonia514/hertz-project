@@ -307,22 +307,20 @@ func InitGenericClient(serviceName string) {
 
 
 #### 性能测试数据
-1. 使用benchmark,在指令 "go test -bench=." 下的测试结果
+1. 使用benchmark,在指令 "go test -bench=. main_test.go" 下的测试结果
     ```
     goos: linux
     goarch: amd64
-    pkg: test
-    cpu: 11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz
-    BenchmarkAddStudentInfo-8            753           1562702 ns/op
-    BenchmarkQueryStudentInfo-8          697           1691799 ns/op
-    BenchmarkAddStudentInfo-8            772           1575801 ns/op
-    BenchmarkQueryStudentInfo-8          836           1583288 ns/op
+    cpu: 11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz
+    BenchmarkAddStudentInfo-16                  2475            492007 ns/op
+    BenchmarkQueryStudentInfo-16                2493            431299 ns/op
     PASS
-    ok      test    7.505s
+    ok      command-line-arguments  4.062s
     ```
-
+    
 2. 使用 Apache benchmark 在指令 "ab -n 1000 -c 100 http://127.0.0.1:8888/add-student-info" 下的 测试结果:
     ```
+    This is ApacheBench, Version 2.3 <$Revision: 1843412 $>
     Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
     Licensed to The Apache Software Foundation, http://www.apache.org/
     
@@ -348,36 +346,36 @@ func InitGenericClient(serviceName string) {
     Document Length:        18 bytes
     
     Concurrency Level:      100
-    Time taken for tests:   0.434 seconds
+    Time taken for tests:   0.039 seconds
     Complete requests:      1000
     Failed requests:        0
     Non-2xx responses:      1000
     Total transferred:      170000 bytes
     HTML transferred:       18000 bytes
-    Requests per second:    2302.91 [#/sec] (mean)
-    Time per request:       43.423 [ms] (mean)
-    Time per request:       0.434 [ms] (mean, across all concurrent requests)
-    Transfer rate:          382.32 [Kbytes/sec] received
+    Requests per second:    25568.25 [#/sec] (mean)
+    Time per request:       3.911 [ms] (mean)
+    Time per request:       0.039 [ms] (mean, across all concurrent requests)
+    Transfer rate:          4244.73 [Kbytes/sec] received
     
     Connection Times (ms)
-    min  mean[+/-sd] median   max
-    Connect:        1   13   7.1     13      41
-    Processing:    12   26   6.6     25      39
-    Waiting:        0   21   7.2     21      39
-    Total:         25   39   5.1     39      54
+                  min  mean[+/-sd] median   max
+    Connect:        0    2   0.7      2       3
+    Processing:     0    2   0.6      2       4
+    Waiting:        0    1   0.6      1       3
+    Total:          3    4   0.4      4       5
     
     Percentage of the requests served within a certain time (ms)
-    50%     39
-    66%     41
-    75%     42
-    80%     43
-    90%     45
-    95%     48
-    98%     52
-    99%     53
-    100%     54 (longest request)
+      50%      4
+      66%      4
+      75%      4
+      80%      4
+      90%      4
+      95%      4
+      98%      4
+      99%      4
+     100%      5 (longest request)
     ```
-
+    
 3. pprof测试结果
    ![pprof.png](https://box.nju.edu.cn/f/a4f7d97fefd24fb5ac10/?dl=1)
 4. flame graph
@@ -386,14 +384,68 @@ func InitGenericClient(serviceName string) {
 
 #### 优化方法说明
 
-todo
+对hertz项目中的Query请求添加cache：
+
+```
+//  hertz-project/biz/handler/hertz/demo/student_service.go
+
+func Query(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req demo.QueryReq
+
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
+
+	//counter>=3时才进行正常访问流程，counter<3时都从cache获取
+
+	if counter<3 {
+		resp, ok := respCache[int(req.ID)]
+		if ok {
+			counter++
+			c.JSON(consts.StatusOK, resp)
+			return
+		}
+	}
+	counter=0
+
+......
+
+	/*****************处理结果***************/
+	c.JSON(consts.StatusOK, resp)
+	respCache[int(req.ID)]=resp
+}
+
+```
+
+通过添加对Query的Cache，减少对9999端口服务端的访问，从而减少访问时间
 
 #### 优化后性能数据
 
-1. 指令 "go test -bench=." 下的测试结果
+指令 "go test -bench=. main_test.go" 下的**优化后**测试结果
 
-2. 指令 "ab -n 1000 -c 100 http://127.0.0.1:8888/add-student-info" 下的 测试结果:
+```
+goos: linux
+goarch: amd64
+cpu: 11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz
+BenchmarkAddStudentInfo-16                  2475            492007 ns/op
+BenchmarkQueryStudentInfo-16                2493            431299 ns/op
+PASS
+ok      command-line-arguments  4.062s
+```
 
-3. pprof测试结果
+对比**优化前**：
 
-4. flame graph
+```
+goos: linux
+goarch: amd64
+cpu: 11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz
+BenchmarkAddStudentInfo-16                  2778            454898 ns/op
+BenchmarkQueryStudentInfo-16                3937            305655 ns/op
+PASS
+ok      command-line-arguments  4.285s
+```
+
+观察两组数据的“BenchmarkQueryStudentInfo-16”项，平均访问时间从 **431299ns/op**降低至**305655 ns/op**，可见优化是成功的

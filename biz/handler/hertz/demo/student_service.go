@@ -56,14 +56,31 @@ func Register(ctx context.Context, c *app.RequestContext) {
 
 // Query .
 // @router /query [GET]
+//存储Query请求返回数据的cache
+var respCache map[int]interface{} = make(map[int]interface{})
+var counter int
+
 func Query(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req demo.QueryReq
+
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
+
+	//counter>=3时才进行正常访问流程，counter<3时都从cache获取
+
+	if counter<3 {
+		resp, ok := respCache[int(req.ID)]
+		if ok {
+			counter++
+			c.JSON(consts.StatusOK, resp)
+			return
+		}
+	}
+	counter=0
 
 	/*****************实现转化为http请求***************/
 	httpReq, err := adaptor.GetCompatRequest(c.GetRequest())
@@ -86,6 +103,7 @@ func Query(ctx context.Context, c *app.RequestContext) {
 
 	/*****************处理结果***************/
 	c.JSON(consts.StatusOK, resp)
+	respCache[int(req.ID)]=resp
 }
 
 var p *generic.ThriftContentProvider = nil
@@ -124,13 +142,7 @@ func InitGenericClient(serviceName string) {
 		ticker := time.NewTicker(time.Second * 10)
 		for range ticker.C {
 			UpdateIdl()
-			gen, err := generic.HTTPThriftGeneric(p)
-			if err != nil {
-				panic(err)
-			}
-			cli, err = genericclient.NewClient(serviceNameCache, gen,
-				kclient.WithHostPorts("127.0.0.1:9999"), //kclient.WithResolver(r),
-			)
+
 			klog.Info("update idl and generic client")
 		}
 	}()
