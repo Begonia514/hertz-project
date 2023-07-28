@@ -147,7 +147,7 @@ curl -H "Content-Type: application/json" -X POST http://127.0.0.1:8888/add-stude
    
    }
    ```
-   
+
 
 **ps：本项目是参考第一种方式实现的**
 
@@ -301,20 +301,99 @@ func InitGenericClient(serviceName string) {
 #### 测试方法说明
 
 
++ 测试文件: 在 test/main_test.go 和 test/mainMux_test.go 两个文件中编写测试代码以分别性能测试和并发量测试
++ 测试流程: 首先构造数据, 然后发送 GET、POST 请求并获取响应、检查状态码
++ 测试工具: 使用 benchmark 和 apache benchmark 等工具进行性能测试
+
 
 #### 性能测试数据
+1. 使用benchmark,在指令 "go test -bench=." 下的测试结果
+    ```
+    goos: linux
+    goarch: amd64
+    pkg: test
+    cpu: 11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz
+    BenchmarkAddStudentInfo-8            753           1562702 ns/op
+    BenchmarkQueryStudentInfo-8          697           1691799 ns/op
+    BenchmarkAddStudentInfo-8            772           1575801 ns/op
+    BenchmarkQueryStudentInfo-8          836           1583288 ns/op
+    PASS
+    ok      test    7.505s
+    ```
 
+2. 使用 Apache benchmark 在指令 "ab -n 1000 -c 100 http://127.0.0.1:8888/add-student-info" 下的 测试结果:
+    ```
+    Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+    Licensed to The Apache Software Foundation, http://www.apache.org/
+    
+    Benchmarking 127.0.0.1 (be patient)
+    Completed 100 requests
+    Completed 200 requests
+    Completed 300 requests
+    Completed 400 requests
+    Completed 500 requests
+    Completed 600 requests
+    Completed 700 requests
+    Completed 800 requests
+    Completed 900 requests
+    Completed 1000 requests
+    Finished 1000 requests
+    
+    
+    Server Software:        hertz
+    Server Hostname:        127.0.0.1
+    Server Port:            8888
+    
+    Document Path:          /add-student-info
+    Document Length:        18 bytes
+    
+    Concurrency Level:      100
+    Time taken for tests:   0.434 seconds
+    Complete requests:      1000
+    Failed requests:        0
+    Non-2xx responses:      1000
+    Total transferred:      170000 bytes
+    HTML transferred:       18000 bytes
+    Requests per second:    2302.91 [#/sec] (mean)
+    Time per request:       43.423 [ms] (mean)
+    Time per request:       0.434 [ms] (mean, across all concurrent requests)
+    Transfer rate:          382.32 [Kbytes/sec] received
+    
+    Connection Times (ms)
+    min  mean[+/-sd] median   max
+    Connect:        1   13   7.1     13      41
+    Processing:    12   26   6.6     25      39
+    Waiting:        0   21   7.2     21      39
+    Total:         25   39   5.1     39      54
+    
+    Percentage of the requests served within a certain time (ms)
+    50%     39
+    66%     41
+    75%     42
+    80%     43
+    90%     45
+    95%     48
+    98%     52
+    99%     53
+    100%     54 (longest request)
+    ```
+
+3. pprof测试结果
+   ![pprof.png](https://box.nju.edu.cn/f/a4f7d97fefd24fb5ac10/?dl=1)
+4. flame graph
+   ![flameGraph.png](https://box.nju.edu.cn/f/7c477eaa091c474e897c/?dl=1)
 
 
 #### 优化方法说明
 
-
+todo
 
 #### 优化后性能数据
 
+1. 指令 "go test -bench=." 下的测试结果
 
+2. 指令 "ab -n 1000 -c 100 http://127.0.0.1:8888/add-student-info" 下的 测试结果:
 
+3. pprof测试结果
 
-
-
-
+4. flame graph
